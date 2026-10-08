@@ -44,6 +44,57 @@ test('keeps the game playable when the furniture models cannot be downloaded', a
   await expectRoom(page);
 });
 
+test('sends the engineer to clicked equipment and uses it on arrival', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
+  await page.getByRole('button', { name: 'Skip', exact: true }).click();
+  await expectRoom(page);
+  const stage = page.locator('.stage-canvas');
+  // The engineer starts in the open aisle, out of reach of the servers.
+  await expect(stage).toHaveAttribute('data-nearby', '');
+  await page.getByRole('main').getByRole('button', { name: 'Servers', exact: true }).click();
+  const details = page.getByRole('complementary', { name: 'Details' });
+  await expect(details.getByRole('heading', { name: 'Servers' })).toBeVisible();
+  // Selection happened because the engineer walked there, not because of a remote click.
+  await expect(stage).toHaveAttribute('data-nearby', 'app');
+});
+
+test('walks with the keyboard and uses nearby equipment with F', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
+  await page.getByRole('button', { name: 'Skip', exact: true }).click();
+  await expectRoom(page);
+  const stage = page.locator('.stage-canvas');
+  const details = page.getByRole('complementary', { name: 'Details' });
+  await expect(stage).toHaveAttribute('data-nearby', '');
+  // F with nothing in reach does nothing.
+  await page.keyboard.press('f');
+  await expect(details).toHaveCount(0);
+  await page.keyboard.down('a');
+  await expect(stage).toHaveAttribute('data-nearby', 'deploy');
+  await page.keyboard.up('a');
+  await expect(page.locator('.use-prompt')).toHaveText('FInspect Deploy');
+  await page.keyboard.press('f');
+  await expect(details.getByRole('heading', { name: 'Deploy' })).toBeVisible();
+  // Right along the glass of the server floor to the growth desk.
+  await page.keyboard.down('d');
+  await expect(stage).toHaveAttribute('data-nearby', 'growth');
+  await page.keyboard.up('d');
+  await page.keyboard.press('f');
+  await expect(details.getByRole('heading', { name: 'Growth' })).toBeVisible();
+  // Keys do nothing while a view covers the room.
+  await page.getByRole('button', { name: 'Tech', exact: true }).click();
+  await page.keyboard.down('a');
+  // Let the scene render a stretch of frames with the key held.
+  await page.evaluate(() => new Promise<void>(done => {
+    let frames = 30;
+    const next = () => (--frames > 0 ? requestAnimationFrame(next) : done());
+    requestAnimationFrame(next);
+  }));
+  await page.keyboard.up('a');
+  await expect(stage).toHaveAttribute('data-nearby', 'growth');
+});
+
 test('recovers from a corrupt save through the playable first-run flow', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('nn.save.v1', '{'));
   await page.goto('/');

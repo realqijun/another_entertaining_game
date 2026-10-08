@@ -95,7 +95,7 @@ export function HowToPlay() {
         </li>
         <li>
           <Concept kind="ok" icon="server" />
-          <span>Click equipment in the room to see it and act on it.</span>
+          <span>Click equipment to send your engineer there, or walk with WASD and press F. Then act on it.</span>
         </li>
         <li>
           <Concept kind="tech" icon="tree" />

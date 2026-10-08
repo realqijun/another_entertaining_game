@@ -36,7 +36,7 @@ npm install
 npm run dev
 ```
 
-The frontend opens the 99.99% title screen and an isometric startup office: a glass-walled server floor surrounded by desks, a monitoring room, meeting rooms, a kitchen and a lounge, with people at work. Press Play to begin the guided first week. Drag to pan, scroll or pinch to zoom, and click equipment to inspect it. `Shift` + drag (or right-drag, or two fingers) rotates and tilts the room; `Q` and `E` turn it by 45 degrees, and the house button resets the view. Walls between the camera and the room drop out of the way. `P` pauses or resumes; `Esc` closes a view.
+The frontend opens the 99.99% title screen and an isometric startup office: a glass-walled server floor surrounded by desks, a monitoring room, meeting rooms, a kitchen and a lounge, with people at work. Press Play to begin the guided first week. Drag to pan, scroll or pinch to zoom. Walk the engineer with `WASD` or the arrow keys (relative to the screen) and press `F` to use the equipment within reach, or click equipment to send the engineer there; walking takes crisis-clock time during incidents. `Shift` + drag (or right-drag, or two fingers) rotates and tilts the room; `Q` and `E` turn it by 45 degrees, and the house button resets the view. Walls between the camera and the room drop out of the way. `P` pauses or resumes; `Esc` closes a view.
 
 The office furniture comes from two CC0 model packs, [Kenney's Furniture Kit](https://kenney.nl/assets/furniture-kit) and [KayKit Furniture Bits](https://kaylousberg.itch.io/furniture-bits) by Kay Lousberg. Their licences sit beside the models in `frontend/public/models/`.
 

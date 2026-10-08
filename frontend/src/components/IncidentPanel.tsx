@@ -98,7 +98,7 @@ export default function IncidentPanel() {
           <span className="step-num" aria-hidden="true">
             1
           </span>
-          <Tip text={`Click equipment in the room or here. Each look takes ${lookSeconds < 2 ? "about a second" : `${Math.round(lookSeconds)} seconds`} of clock time. Monitoring makes it faster.`}>
+          <Tip text={`Walk to equipment in the room (walking takes clock time too) or click it here. Each look takes ${lookSeconds < 2 ? "about a second" : `${Math.round(lookSeconds)} seconds`} of clock time. Monitoring makes it faster.`}>
             Find the cause
           </Tip>
         </h4>
