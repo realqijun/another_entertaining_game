@@ -12,6 +12,30 @@ const Z0 = -9.5;
 const Z1 = 14.5;
 export const ROOM = { x0: X0, x1: X1, z0: Z0, z1: Z1, w: X1 - X0, d: Z1 - Z0, cx: (X0 + X1) / 2, cz: (Z0 + Z1) / 2, wallH: 3.4 };
 
+/** Glass partition runs as [x1, z1, x2, z2]. Gaps for doors are already left out. */
+export const GLASS: [number, number, number, number][] = [
+  // Server floor
+  [-13, 5, -2.0, 5],
+  [-0.8, 5, 9, 5],
+  [9, -4.6, 9, -0.2],
+  [9, 1.0, 9, 5],
+  [-13, -9.5, -13, -0.6],
+  [-13, 0.6, -13, 5],
+  // Monitoring room
+  [5.5, -9.5, 5.5, -4.6],
+  [5.5, -4.6, 9.6, -4.6],
+  [10.6, -4.6, 11.5, -4.6],
+  [11.5, -9.5, 11.5, -4.6],
+  // Network and power room
+  [-22, -1, -15.2, -1],
+  [-14.0, -1, -13, -1],
+  // Meeting room
+  [-13, 10.2, -6.8, 10.2],
+  [-5.9, 10.2, -5.5, 10.2],
+  [-5.5, 10.2, -5.5, 14.5],
+  [-13, 10.2, -13, 14.5],
+];
+
 export const RACK = { w: 0.95, d: 1.05, h: 2.1 };
 export const DB_CABINET = { w: 1.25, d: 1.2, h: 2.25 };
 

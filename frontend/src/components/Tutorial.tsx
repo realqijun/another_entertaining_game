@@ -37,7 +37,7 @@ const BASICS: Step[] = [
   {
     title: "Add a server",
     why: "A traffic surge hits in week 4.",
-    hint: (s) => (s.selected === "app" ? "Press Add server." : "Click Servers."),
+    hint: (s) => (s.selected === "app" ? "Press Add server." : "Click Servers, or walk there with WASD and press F."),
     target: (s) => (s.selected === "app" ? `.side ${PRIMARY}` : label("app")),
     enter: clear,
     done: (s) => s.game.infra.appHosts.length >= 2,

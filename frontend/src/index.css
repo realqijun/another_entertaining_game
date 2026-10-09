@@ -869,6 +869,42 @@ button:disabled {
   opacity: 1;
 }
 
+/* Within the engineer's reach: lit like a hover, so it is clear what the use key acts on. */
+.eq-label.is-near {
+  outline: 3px solid var(--go);
+  outline-offset: 1px;
+}
+
+/* What the use key will do, floating over the engineer's head. */
+.use-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 3px;
+  background: var(--ink);
+  color: var(--on-night);
+  border: 2px solid var(--go);
+  border-radius: var(--radius);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.use-prompt kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--go);
+  color: var(--ink);
+  font-family: var(--font-num);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .wall-tag {
   display: inline-flex;
   align-items: center;

@@ -19,3 +19,13 @@ test('plays a first week and opens and closes Tech on a touch viewport', async (
   const viewportWidth = page.viewportSize()!.width;
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewportWidth);
 });
+
+test('taps equipment to walk the engineer there on a touch viewport', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
+  await page.getByRole('button', { name: 'Skip', exact: true }).click();
+  await expectRoom(page);
+  await page.getByRole('main').getByRole('button', { name: 'Growth', exact: true }).tap();
+  await expect(page.getByRole('complementary', { name: 'Details' }).getByRole('heading', { name: 'Growth' })).toBeVisible();
+  await expect(page.locator('.stage-canvas')).toHaveAttribute('data-nearby', 'growth');
+});

@@ -16,7 +16,8 @@ import {
   type EquipmentState,
   type GameState,
 } from "@/sim";
-import { inspectOrSelect, useGame } from "@/game/store";
+import { useGame } from "@/game/store";
+import { body, usePlayer } from "@/game/player";
 import {
   AISLE_Z,
   appSlot,
@@ -33,6 +34,7 @@ import {
 import { concreteFloor, LED_COLORS, panelTextures, screenTexture, type Led, type PanelVariant, type ScreenKind } from "./textures";
 import { EQUIPMENT_ICON, Icon, STATE_META } from "../icons";
 import { Office } from "./Office";
+import Player from "./Player";
 import { OnWall, updateWalls, Wall } from "./walls";
 
 /* ------------------------------------------------------------------ */
@@ -457,7 +459,10 @@ const AMBER = "#ff9f1a";
 
 function Pad({ id, f, built, symptomatic, inspecting }: { id: EquipmentId; f: Footprint; built: boolean; symptomatic: boolean; inspecting: boolean }) {
   const selected = useGame((s) => s.selected === id);
-  const hovered = useGame((s) => s.hovered === id);
+  const pointed = useGame((s) => s.hovered === id);
+  // Equipment within the engineer's reach lights up as if hovered.
+  const near = usePlayer((s) => s.nearby === id);
+  const hovered = pointed || near;
   const fill = useRef<THREE.MeshBasicMaterial>(null);
   const alerting = symptomatic || inspecting;
 
@@ -490,7 +495,7 @@ function Pad({ id, f, built, symptomatic, inspecting }: { id: EquipmentId; f: Fo
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     if (e.delta > 6) return;
     e.stopPropagation();
-    inspectOrSelect(id);
+    usePlayer.getState().walkTo(id);
   };
 
   return (
@@ -528,6 +533,7 @@ function Pad({ id, f, built, symptomatic, inspecting }: { id: EquipmentId; f: Fo
 const anchors = new Map<string, THREE.Vector3>();
 const labelEls = new Map<string, HTMLElement>();
 const INTERNET = "internet";
+const PLAYER = "player";
 
 function LabelProjector({ footprints }: { footprints: Record<EquipmentId, Footprint> }) {
   const v = useMemo(() => new THREE.Vector3(), []);
@@ -541,6 +547,9 @@ function LabelProjector({ footprints }: { footprints: Record<EquipmentId, Footpr
   }, [footprints]);
 
   useFrame(({ camera, size }) => {
+    // The use prompt floats above the engineer's head.
+    const head = anchors.get(PLAYER) ?? anchors.set(PLAYER, new THREE.Vector3()).get(PLAYER)!;
+    head.set(body.x, 2.05, body.z);
     anchors.forEach((pos, key) => {
       const el = labelEls.get(key);
       if (!el) return;
@@ -564,6 +573,7 @@ function bindLabel(key: string) {
 function Label({ id, m }: { id: EquipmentId; m: SceneModel }) {
   const selected = useGame((s) => s.selected === id);
   const hovered = useGame((s) => s.hovered === id);
+  const near = usePlayer((s) => s.nearby === id);
   const built = m.built[id];
   const inspecting = m.inspecting === id;
   const inspected = m.inspected.includes(id);
@@ -573,8 +583,8 @@ function Label({ id, m }: { id: EquipmentId; m: SceneModel }) {
       type="button"
       ref={bindLabel(id)}
       data-eq={id}
-      className={`eq-label tone-${tone}${selected ? " is-selected" : ""}${!built && !selected && !hovered ? " is-quiet" : ""}`}
-      onClick={() => inspectOrSelect(id)}
+      className={`eq-label tone-${tone}${selected ? " is-selected" : ""}${near ? " is-near" : ""}${!built && !selected && !hovered && !near ? " is-quiet" : ""}`}
+      onClick={() => usePlayer.getState().walkTo(id)}
       onFocus={() => useGame.getState().hover(id)}
       onBlur={() => useGame.getState().hover(null)}
       aria-label={`${m.names[id]}${built ? "" : ", not built"}`}
@@ -590,6 +600,19 @@ function Label({ id, m }: { id: EquipmentId; m: SceneModel }) {
   );
 }
 
+/** "F · Inspect Servers" above the engineer while something is within reach. */
+function UsePrompt({ m }: { m: SceneModel }) {
+  const nearby = usePlayer((s) => s.nearby);
+  if (!nearby) return null;
+  const verb = m.incident && m.built[nearby] && !m.inspected.includes(nearby) && m.inspecting !== nearby ? "Investigate" : "Inspect";
+  return (
+    <span className="use-prompt" ref={bindLabel(PLAYER)} aria-hidden="true">
+      <kbd>F</kbd>
+      {verb} {m.names[nearby]}
+    </span>
+  );
+}
+
 function Labels() {
   const m = useSceneModel();
   return (
@@ -601,6 +624,7 @@ function Labels() {
       {EQUIPMENT_ORDER.filter((id) => (id !== "replica" && id !== "backup") || m.built[id]).map((id) => (
         <Label key={id} id={id} m={m} />
       ))}
+      <UsePrompt m={m} />
     </div>
   );
 }
@@ -751,6 +775,7 @@ function Scene() {
       {EQUIPMENT_ORDER.map((id) => (
         <Pad key={id} id={id} f={m.footprints[id]} built={m.built[id]} symptomatic={sym(id)} inspecting={m.inspecting === id} />
       ))}
+      <Player footprints={m.footprints} built={m.built} />
       <LabelProjector footprints={m.footprints} />
 
       <CameraRig footprints={m.footprints} built={m.built} />
@@ -835,8 +860,9 @@ export default function Facility() {
   const container = useRef<HTMLDivElement>(null);
   /** Drawing in software, without a GPU: no shadows, half the pixels, 20 frames a second. */
   const [soft, setSoft] = useState(false);
+  const nearby = usePlayer((s) => s.nearby);
   return (
-    <div className="stage-canvas" ref={container}>
+    <div className="stage-canvas" ref={container} data-nearby={nearby ?? ""}>
       <Canvas
         orthographic
         shadows={soft ? false : "percentage"}
@@ -855,7 +881,7 @@ export default function Facility() {
         onPointerMissed={() => {
           if (useGame.getState().game.phase !== "incident") useGame.getState().select(null);
         }}
-        aria-label="Isometric view of the server room. Each equipment label is a button."
+        aria-label="Isometric view of the server room. Walk the engineer with WASD or the arrow keys and press F to use equipment. Each equipment label is a button that sends the engineer there."
       >
         <Scene />
         {soft && <SoftwareFrames />}
@@ -879,7 +905,7 @@ export default function Facility() {
           ⌂
         </button>
         <span className="camera-hint" aria-hidden="true">
-          <kbd>Shift</kbd> + drag to rotate and tilt · <kbd>Q</kbd> <kbd>E</kbd> to turn
+          <kbd>WASD</kbd> walk · <kbd>F</kbd> use · <kbd>Shift</kbd> + drag to rotate and tilt · <kbd>Q</kbd> <kbd>E</kbd> to turn
         </span>
       </div>
     </div>
